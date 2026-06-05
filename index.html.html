@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sleep Gallery Invite Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f0f0f; color: #f0f0ee; font-family: 'Syne', sans-serif; min-height: 100vh; padding: 24px 16px 60px; }
+  .fw { max-width: 480px; margin: 0 auto; }
+  .fh { margin-bottom: 20px; }
+  .ft { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: #f0f0ee; }
+  .fs { font-family: 'DM Mono', monospace; font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+  .fg { margin-bottom: 16px; }
+  .fl { display: block; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; color: #666; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 7px; }
+  .req { color: #f5704a; margin-left: 2px; }
+  input[type=date], input[type=text], textarea {
+    width: 100%; font-family: 'DM Mono', monospace; font-size: 13px;
+    background: #1a1a1a; border: 1px solid #2e2e2e; border-radius: 8px;
+    padding: 10px 12px; color: #f0f0ee; outline: none; box-sizing: border-box;
+  }
+  input[type=date]:focus, input[type=text]:focus, textarea:focus { border-color: #d4f54a; }
+  input[type=date]::-webkit-calendar-picker-indicator { filter: invert(1); }
+  textarea { min-height: 70px; resize: none; }
+  ::placeholder { color: #444; }
+  .rbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .rbtn {
+    padding: 18px 10px; border-radius: 10px; border: 1.5px solid #2e2e2e;
+    background: #1a1a1a; font-family: 'Syne', sans-serif; font-size: 15px;
+    font-weight: 700; cursor: pointer; color: #555; transition: all 0.12s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .rbtn:active { transform: scale(0.97); }
+  .rbtn.yes.sel { background: rgba(74,245,144,0.12); border-color: #4af590; color: #4af590; }
+  .rbtn.no.sel { background: rgba(245,112,74,0.1); border-color: #f5704a; color: #f5704a; }
+  .rbtn.yes:hover { background: rgba(74,245,144,0.08); border-color: rgba(74,245,144,0.5); color: #4af590; }
+  .rbtn.no:hover { background: rgba(245,112,74,0.08); border-color: rgba(245,112,74,0.5); color: #f5704a; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .chip {
+    font-family: 'DM Mono', monospace; font-size: 11px; padding: 6px 12px;
+    border-radius: 20px; border: 1px solid rgba(245,112,74,0.3);
+    background: #1a1a1a; color: #777; cursor: pointer; transition: all 0.12s;
+  }
+  .chip:hover { border-color: #f5704a; color: #f5704a; }
+  .chip.sel { background: #f5704a; border-color: #f5704a; color: #fff; }
+  .reason-wrap {
+    background: rgba(245,112,74,0.07); border: 1px solid rgba(245,112,74,0.2);
+    border-radius: 10px; padding: 14px; margin-bottom: 16px; display: none;
+  }
+  .reason-wrap.show { display: block; }
+  .reason-title { font-family: 'DM Mono', monospace; font-size: 10px; color: #f5704a; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+  .sub-btn {
+    width: 100%; padding: 15px; border-radius: 10px; border: none;
+    background: #d4f54a; font-family: 'Syne', sans-serif; font-size: 15px;
+    font-weight: 800; color: #0f0f0f; cursor: pointer; margin-top: 8px;
+    transition: opacity 0.12s; letter-spacing: -0.01em;
+  }
+  .sub-btn:hover { opacity: 0.88; }
+  .sub-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+  .email-btn {
+    width: 100%; padding: 14px; border-radius: 10px;
+    border: 1.5px solid #4a9af5; background: rgba(74,154,245,0.08);
+    font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+    color: #4a9af5; cursor: pointer; margin-top: 10px;
+    transition: all 0.12s; letter-spacing: -0.01em;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .email-btn:hover { background: rgba(74,154,245,0.15); }
+  .email-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+  .divider { border: none; border-top: 1px solid #222; margin: 24px 0; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+  .sbox { background: #1a1a1a; border: 1px solid #2e2e2e; border-radius: 8px; padding: 10px 6px; text-align: center; }
+  .snum { font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; display: block; }
+  .snum.a { color: #d4f54a; }
+  .snum.g { color: #4af590; }
+  .snum.r { color: #f5704a; }
+  .snum.w { color: #f0f0ee; }
+  .slbl { font-family: 'DM Mono', monospace; font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 0.06em; }
+  .log-title { font-family: 'DM Mono', monospace; font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+  .log-empty { font-family: 'DM Mono', monospace; font-size: 12px; color: #444; text-align: center; padding: 20px 0; }
+  .litem { border-radius: 10px; border: 1px solid #2e2e2e; padding: 12px 14px; margin-bottom: 8px; background: #1a1a1a; }
+  .litem.yes { background: rgba(74,245,144,0.07); border-color: rgba(74,245,144,0.25); }
+  .litem.no { background: rgba(245,112,74,0.07); border-color: rgba(245,112,74,0.2); }
+  .lrow { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+  .lic { font-size: 16px; }
+  .litem.yes .lic { color: #4af590; }
+  .litem.no .lic { color: #f5704a; }
+  .lres { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; flex: 1; }
+  .litem.yes .lres { color: #4af590; }
+  .litem.no .lres { color: #f5704a; }
+  .lnum { font-family: 'DM Mono', monospace; font-size: 10px; color: #444; }
+  .lreason { font-family: 'DM Mono', monospace; font-size: 11px; color: #666; margin-top: 3px; }
+  .lnotes { font-family: 'DM Mono', monospace; font-size: 11px; color: #444; margin-top: 3px; font-style: italic; }
+  .clear-btn {
+    width: 100%; padding: 9px; background: none; border: 1px solid #2e2e2e;
+    border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 11px;
+    color: #444; cursor: pointer; margin-top: 6px; transition: all 0.15s;
+  }
+  .clear-btn:hover { color: #f5704a; border-color: rgba(245,112,74,0.4); }
+  .flash {
+    background: rgba(74,245,144,0.1); border: 1px solid rgba(74,245,144,0.3);
+    border-radius: 10px; padding: 12px 14px; font-family: 'DM Mono', monospace;
+    font-size: 12px; color: #4af590; text-align: center; margin-bottom: 16px; display: none;
+  }
+  .top-reasons { margin-top: 4px; margin-bottom: 16px; }
+  .tr-title { font-family: 'DM Mono', monospace; font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+  .tr-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .tr-lbl { font-family: 'DM Mono', monospace; font-size: 11px; color: #666; min-width: 140px; }
+  .tr-track { flex: 1; height: 4px; background: #222; border-radius: 2px; overflow: hidden; }
+  .tr-fill { height: 100%; background: #f5704a; opacity: 0.6; border-radius: 2px; }
+  .tr-count { font-family: 'DM Mono', monospace; font-size: 11px; color: #444; min-width: 20px; text-align: right; }
+  .date-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+</style>
+</head>
+<body>
+<div class="fw">
+  <div class="fh">
+    <div class="ft">🛏 Gallery tracker</div>
+    <div class="fs">sleep gallery invite — shift log</div>
+  </div>
+
+  <div class="flash" id="flash">✓ Attempt logged!</div>
+
+  <div class="fg date-row">
+    <div>
+      <span class="fl">Date <span class="req">*</span></span>
+      <input type="date" id="f-date">
+    </div>
+    <div>
+      <span class="fl">Associate name</span>
+      <input type="text" id="f-name" placeholder="Your name">
+    </div>
+  </div>
+
+  <div class="fg">
+    <span class="fl">Did they go to the sleep gallery? <span class="req">*</span></span>
+    <div class="rbtns">
+      <button class="rbtn yes" id="btn-yes" onclick="selResult('yes')">
+        <span>✓</span> Yes — went in
+      </button>
+      <button class="rbtn no" id="btn-no" onclick="selResult('no')">
+        <span>✕</span> No — declined
+      </button>
+    </div>
+  </div>
+
+  <div class="reason-wrap" id="reason-wrap">
+    <div class="reason-title">⚠ Why did they decline? (required)</div>
+    <div class="chips" id="chips">
+      <div class="chip" onclick="selChip(this,'In a hurry')">In a hurry</div>
+      <div class="chip" onclick="selChip(this,'Already has a mattress')">Already has a mattress</div>
+      <div class="chip" onclick="selChip(this,'Not interested')">Not interested</div>
+      <div class="chip" onclick="selChip(this,'Browsing alone')">Browsing alone</div>
+      <div class="chip" onclick="selChip(this,'Large group')">Large group</div>
+      <div class="chip" onclick="selChip(this,'Just looking')">Just looking</div>
+      <div class="chip" onclick="selChip(this,'Price concerns')">Price concerns</div>
+    </div>
+    <input type="text" id="f-reason" placeholder="Or type a custom reason..." oninput="clearChips()">
+  </div>
+
+  <div class="fg">
+    <span class="fl">Shift notes (optional)</span>
+    <textarea id="f-notes" placeholder="What you said, how they responded, patterns noticed..."></textarea>
+  </div>
+
+  <button class="sub-btn" id="sub-btn" onclick="doSubmit()" disabled>Log attempt →</button>
+
+  <hr class="divider">
+
+  <div class="stats-grid">
+    <div class="sbox"><span class="snum a" id="s-tot">0</span><span class="slbl">Total</span></div>
+    <div class="sbox"><span class="snum g" id="s-yes">0</span><span class="slbl">Yes</span></div>
+    <div class="sbox"><span class="snum r" id="s-no">0</span><span class="slbl">No</span></div>
+    <div class="sbox"><span class="snum w" id="s-rate">—</span><span class="slbl">Conv %</span></div>
+  </div>
+
+  <div class="top-reasons" id="top-reasons"></div>
+
+  <div class="log-title">Today's entries</div>
+  <div id="log-list"></div>
+
+  <button class="email-btn" id="email-btn" onclick="sendEmail()" disabled>
+    📧 Send today's report to manager
+  </button>
+  <button class="clear-btn" onclick="clearLog()">↺ clear today's log</button>
+</div>
+
+<script>
+  const MANAGER_EMAIL = 'marios@cityfurniture.com';
+  let selRes = null, selChipVal = null, log = [];
+
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('f-date').value = today;
+
+  function selResult(r) {
+    selRes = r;
+    document.getElementById('btn-yes').classList.toggle('sel', r === 'yes');
+    document.getElementById('btn-no').classList.toggle('sel', r === 'no');
+    document.getElementById('reason-wrap').classList.toggle('show', r === 'no');
+    if (r === 'yes') { selChipVal = null; document.getElementById('f-reason').value = ''; clearChips(); }
+    chkValid();
+  }
+
+  function selChip(el, v) {
+    selChipVal = v;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('sel'));
+    el.classList.add('sel');
+    document.getElementById('f-reason').value = '';
+    chkValid();
+  }
+
+  function clearChips() {
+    selChipVal = null;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('sel'));
+    chkValid();
+  }
+
+  function chkValid() {
+    const ok = !!document.getElementById('f-date').value
+      && !!selRes
+      && (selRes !== 'no' || (selChipVal || document.getElementById('f-reason').value.trim()));
+    document.getElementById('sub-btn').disabled = !ok;
+  }
+
+  document.getElementById('f-reason').addEventListener('input', chkValid);
+  document.getElementById('f-date').addEventListener('input', chkValid);
+
+  function doSubmit() {
+    const entry = {
+      date: document.getElementById('f-date').value,
+      name: document.getElementById('f-name').value.trim(),
+      result: selRes,
+      reason: selRes === 'no' ? (selChipVal || document.getElementById('f-reason').value.trim()) : '',
+      notes: document.getElementById('f-notes').value.trim(),
+      ts: Date.now()
+    };
+    log.push(entry);
+    resetForm();
+    render();
+    const fl = document.getElementById('flash');
+    fl.style.display = 'block';
+    setTimeout(() => fl.style.display = 'none', 2200);
+  }
+
+  function resetForm() {
+    selRes = null; selChipVal = null;
+    document.getElementById('btn-yes').classList.remove('sel');
+    document.getElementById('btn-no').classList.remove('sel');
+    document.getElementById('reason-wrap').classList.remove('show');
+    document.getElementById('f-reason').value = '';
+    document.getElementById('f-notes').value = '';
+    document.getElementById('f-date').value = today;
+    clearChips();
+    document.getElementById('sub-btn').disabled = true;
+  }
+
+  function render() {
+    const td = log.slice().reverse();
+    const tot = td.length;
+    const yes = td.filter(e => e.result === 'yes').length;
+    const no = tot - yes;
+
+    document.getElementById('s-tot').textContent = tot;
+    document.getElementById('s-yes').textContent = yes;
+    document.getElementById('s-no').textContent = no;
+    document.getElementById('s-rate').textContent = tot > 0 ? Math.round(yes / tot * 100) + '%' : '—';
+
+    const rc = {};
+    td.filter(e => e.result === 'no').forEach(e => { const r = e.reason || 'No reason'; rc[r] = (rc[r] || 0) + 1; });
+    const sorted = Object.entries(rc).sort((a, b) => b[1] - a[1]).slice(0, 4);
+    const max = sorted[0] ? sorted[0][1] : 1;
+    const tr = document.getElementById('top-reasons');
+    tr.innerHTML = sorted.length === 0 ? '' : '<div class="tr-title">Top reasons for "no" today</div>' +
+      sorted.map(([r, c]) => `<div class="tr-row"><span class="tr-lbl">${r}</span><div class="tr-track"><div class="tr-fill" style="width:${Math.round(c/max*100)}%"></div></div><span class="tr-count">${c}</span></div>`).join('');
+
+    const list = document.getElementById('log-list');
+    list.innerHTML = tot === 0
+      ? '<div class="log-empty">No entries yet today.</div>'
+      : td.map((e, i) => `
+        <div class="litem ${e.result}">
+          <div class="lrow">
+            <span class="lic">${e.result === 'yes' ? '✓' : '✕'}</span>
+            <span class="lres">${e.result === 'yes' ? 'Went to gallery' : 'Declined'}</span>
+            <span class="lnum">#${tot - i}${e.name ? ' · ' + e.name : ''}</span>
+          </div>
+          ${e.reason ? `<div class="lreason">→ ${e.reason}</div>` : ''}
+          ${e.notes ? `<div class="lnotes">${e.notes}</div>` : ''}
+        </div>`).join('');
+
+    document.getElementById('email-btn').disabled = tot === 0;
+  }
+
+  function sendEmail() {
+    if (log.length === 0) return;
+    const td = log.slice().reverse();
+    const tot = td.length;
+    const yes = td.filter(e => e.result === 'yes').length;
+    const no = tot - yes;
+    const rate = Math.round(yes / tot * 100);
+    const assocName = td.find(e => e.name)?.name || 'Associate';
+
+    const rc = {};
+    td.filter(e => e.result === 'no').forEach(e => { const r = e.reason || 'No reason'; rc[r] = (rc[r] || 0) + 1; });
+    const sorted = Object.entries(rc).sort((a, b) => b[1] - a[1]);
+
+    let body = `SLEEP GALLERY INVITE REPORT\n`;
+    body += `Associate: ${assocName}\n`;
+    body += `Date: ${td[0].date}\n`;
+    body += `\n--- SUMMARY ---\n`;
+    body += `Total attempts: ${tot}\n`;
+    body += `Yes (went in): ${yes}\n`;
+    body += `No (declined): ${no}\n`;
+    body += `Conversion rate: ${rate}%\n`;
+
+    if (sorted.length > 0) {
+      body += `\n--- TOP DECLINE REASONS ---\n`;
+      sorted.forEach(([r, c]) => { body += `${r}: ${c}\n`; });
+    }
+
+    body += `\n--- FULL LOG ---\n`;
+    td.forEach((e, i) => {
+      body += `\n#${tot - i} | ${e.result === 'yes' ? 'WENT IN' : 'DECLINED'}`;
+      if (e.name) body += ` | ${e.name}`;
+      if (e.reason) body += `\n  Reason: ${e.reason}`;
+      if (e.notes) body += `\n  Notes: ${e.notes}`;
+      body += `\n`;
+    });
+
+    const subject = encodeURIComponent(`Sleep Gallery Report — ${assocName} — ${td[0].date}`);
+    const encodedBody = encodeURIComponent(body);
+    window.location.href = `mailto:${MANAGER_EMAIL}?subject=${subject}&body=${encodedBody}`;
+  }
+
+  function clearLog() {
+    if (confirm('Clear all entries?')) {
+      log = [];
+      render();
+    }
+  }
+
+  render();
+</script>
+</body>
+</html>
